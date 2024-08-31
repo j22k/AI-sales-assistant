@@ -22,11 +22,12 @@
             <!-- Text and Input Column -->
             <div class="col-md-6">
                 <div class="p-3 bg-light">
-                    <p>This is a paragraph with some content describing the video or any other information you want to
-                        include. You can expand on this text as needed.</p>
+                    <p id="textDisplay" class="form-control bg-white border" aria-label="Text content">Your text will
+                        appear here after processing.</p>
+
                     <!-- Text Field and Record Button -->
                     <div class="input-group mt-3">
-                        <input type="text" class="form-control" placeholder="Enter text here" aria-label="Text input">
+
                         <button id="recordButton" class="btn btn-danger" type="button">Record</button>
                     </div>
                 </div>
@@ -85,10 +86,8 @@
                     })
                         .then(response => response.json())
                         .then(data => {
-                            console.log('Success:', data);
-                            console.log('Success:', data.text.response_message);
-                            // Create a new SpeechSynthesisUtterance object
-                            const text = "Hello world"
+                            console.log(data);
+                            const text = "hello world";
 
                             // Create a new SpeechSynthesisUtterance object
                             const utterance = new SpeechSynthesisUtterance(text);
