@@ -27,7 +27,6 @@
 
                     <!-- Text Field and Record Button -->
                     <div class="input-group mt-3">
-
                         <button id="recordButton" class="btn btn-danger" type="button">Record</button>
                     </div>
                 </div>
@@ -58,24 +57,6 @@
 
                 mediaRecorder.onstop = () => {
                     const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    const audio = new Audio(audioUrl);
-
-                    // Play the video when audio starts
-                    audio.onplay = () => {
-                        videoPlayer.play();
-                    };
-
-                    // Stop the video when audio stops
-                    audio.onended = () => {
-                        videoPlayer.pause();
-                        videoPlayer.currentTime = 0; // Reset video to start
-                    };
-
-                    // Play the recorded audio
-                    //audio.play();
-
-                    // Create FormData object to send audio to the server
                     const formData = new FormData();
                     formData.append('audio', audioBlob, 'recording.wav');
 
@@ -86,25 +67,46 @@
                     })
                         .then(response => response.json())
                         .then(data => {
-                            console.log(data);
-                            const text = "hello world";
-
+                            console.log(data.text.response_message);
+                            
                             // Create a new SpeechSynthesisUtterance object
-                            const utterance = new SpeechSynthesisUtterance(text);
+                            const utterance = new SpeechSynthesisUtterance(data.text.response_message);
 
                             // Set the language (optional)
                             utterance.lang = 'en-US';
 
-                            // Set the voice (optional)
+                            // Handle voice selection
                             const voices = window.speechSynthesis.getVoices();
-                            utterance.voice = voices.find(voice => voice.name === 'Google US English') || voices[0];
+                            if (voices.length) {
+                                utterance.voice = voices.find(voice => voice.name === 'Google US English') || voices[0];
+                            } else {
+                                // In case voices are not loaded yet, handle it asynchronously
+                                window.speechSynthesis.onvoiceschanged = () => {
+                                    const voices = window.speechSynthesis.getVoices();
+                                    utterance.voice = voices.find(voice => voice.name === 'Google US English') || voices[0];
+                                };
+                            }
 
-                            // Set pitch and rate (optional)
+                            // Set pitch and rate
                             utterance.pitch = 1;
                             utterance.rate = 1;
 
+                            // Play the video when the speech starts
+                            utterance.onstart = () => {
+                                videoPlayer.play();
+                            };
+
+                            // Stop the video when the speech ends
+                            utterance.onend = () => {
+                                videoPlayer.pause();
+                                videoPlayer.currentTime = 0; // Reset video to start
+                            };
+
                             // Speak the text
                             window.speechSynthesis.speak(utterance);
+
+                            // Update the text display
+                            document.getElementById('textDisplay').textContent = data.response;
                         })
                         .catch(error => {
                             console.error('Error:', error);
@@ -113,6 +115,9 @@
                     // Clear the audio chunks array for the next recording
                     audioChunks = [];
                 };
+            })
+            .catch(error => {
+                console.error('Error accessing microphone:', error);
             });
 
         // Toggle recording state on button click
